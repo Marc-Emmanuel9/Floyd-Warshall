@@ -92,13 +92,22 @@ public class Graphe implements Iterable<int[]>{
 	/**
 	 * @return int[][]: la matrice de valeur du graphe
 	 */
-	public int[][] matriceValeur() {
+	public double[][] matriceValeur() {
 		/*
 		 * On crée la matrice d'adjacence, si aucune valeur est attribuer au tableau 2D la 
 		 * valeur 0 est donner par défaut
 		 */
-		int[][] matriceVal = new int[this.nbSommet][this.nbSommet]; 
-			
+		double[][] matriceVal = new double[this.nbSommet][this.nbSommet]; 
+		
+		for (int i = 0; i < matriceVal.length; i++) {
+			for (int j = 0; j < matriceVal.length; j++) {
+				matriceVal[i][j] = Double.POSITIVE_INFINITY;
+				if(i == j) {
+					matriceVal[i][j] = 0;
+				}
+			}
+		}
+		
 		for(int[] i: this) {
 			matriceVal[i[0]][i[1]] = i[2];
 		}
@@ -112,34 +121,26 @@ public class Graphe implements Iterable<int[]>{
 		 * On a choisie de retourner la matrice adjacente et de valeur en même temps, l'une 
 		 * à côté de l'autre.
 		 */
-		int indice = 0;
 		String toString = "Matrice Adjacente :\n";
-		for (int i = 0; i < this.nbSommet; i++) {
-			toString += i + "  ";
-		}
-		toString += "\n\n";
+
 		for(int[] matrice: matriceAdjacent()) {
 			for(int element: matrice) {
-				toString += element + "  ";
+				toString += element + "\t";
 			}
-			toString += " | " + indice;
-			indice++;
 			toString += "\n";
 		}
-		indice = 0;
+		
+
 		toString += "\nMatrice de Valeur :\n";
-		for (int i = 0; i < this.nbSommet; i++) {
-			toString += i + "  ";
-		}
-		toString += "\n\n";
-		for(int[] matrice: matriceValeur()) {
-			
-			for(int element: matrice) {
-				toString += element + "  ";
+		for(double[] matrice: matriceValeur()) {
+			for(double element: matrice) {
+				if(element == Double.POSITIVE_INFINITY) {
+					toString += "I\t";
+				}else {
+					toString += element + "\t";
+				}
 			}
-			toString += " | " + indice;
 			toString += "\n";
-			indice++;
 		}
 		return toString;
 	}
@@ -149,9 +150,10 @@ public class Graphe implements Iterable<int[]>{
 	 * On va maintenant coder une fontion renvoyant si le graphe possede un circuit élémentaire les 
 	 * extrémité initial composant le circuit
 	 */
-	/*public List<Integer> aCircuit() {
+	public List<Integer> aCircuit() {
 		List<Integer> circuit = new ArrayList<Integer>();
 		int[] circuitEnCourt = new int[graphe.size()];
+		
 		int cpt = 0;
 		for(int[] i: this) {
 			circuitEnCourt[cpt] = i[1];
@@ -159,7 +161,7 @@ public class Graphe implements Iterable<int[]>{
 		
 		
 		return circuit;
-	}*/
+	}
 	
 	
 	/**
@@ -170,8 +172,19 @@ public class Graphe implements Iterable<int[]>{
 		/*
 		 * Pour savoir si un graphe possède un circuit absorbant
 		 */
-		return true;
+		List<Integer> circuit = aCircuit();
+		int totalArc = 0;
+		
+		for(int[] elt: this) {
+			if(circuit.contains(elt[0])) {
+				totalArc += elt[2];
+				circuit.remove(elt[0]);
+			}
+		}
+		
+		return totalArc < 0;
 	}
+	
 	/**
 	 * @return the nbSommet
 	 */
