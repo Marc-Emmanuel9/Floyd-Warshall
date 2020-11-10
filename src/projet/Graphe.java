@@ -151,7 +151,7 @@ public class Graphe implements Iterable<int[]>{
 	 * extrémité initial composant le circuit
 	 */
 	public List<Integer> aCircuit() {
-		List<Integer> circuit = new ArrayList<Integer>();
+		List<Integer> circuit = null;
 		int[] circuitEnCourt = new int[graphe.size()];
 		
 		int cpt = 0;
@@ -163,7 +163,7 @@ public class Graphe implements Iterable<int[]>{
 		return circuit;
 	}
 	
-	
+	// [nb_circuit, sommet]
 	/**
 	 * 
 	 * @return boolean: true si le graphe possede un circuit absorbant, false sinon
@@ -172,17 +172,8 @@ public class Graphe implements Iterable<int[]>{
 		/*
 		 * Pour savoir si un graphe possède un circuit absorbant
 		 */
-		List<Integer> circuit = aCircuit();
-		int totalArc = 0;
-		
-		for(int[] elt: this) {
-			if(circuit.contains(elt[0])) {
-				totalArc += elt[2];
-				circuit.remove(elt[0]);
-			}
-		}
-		
-		return totalArc < 0;
+
+		return true;
 	}
 	
 	/**
@@ -218,5 +209,44 @@ public class Graphe implements Iterable<int[]>{
 	public Iterator<int[]> iterator() {
 		return this.graphe.iterator();
 	}
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((fichier == null) ? 0 : fichier.hashCode());
+		result = prime * result + ((graphe == null) ? 0 : graphe.hashCode());
+		result = prime * result + nbArc;
+		result = prime * result + nbSommet;
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		Graphe other = (Graphe) obj;
+		if (fichier == null) {
+			if (other.fichier != null)
+				return false;
+		} else if (!fichier.equals(other.fichier))
+			return false;
+		if (graphe == null) {
+			if (other.graphe != null)
+				return false;
+		} else if (!graphe.equals(other.graphe))
+			return false;
+		if (nbArc != other.nbArc)
+			return false;
+		if (nbSommet != other.nbSommet)
+			return false;
+		return true;
+	}
+	
+	
 
 }
