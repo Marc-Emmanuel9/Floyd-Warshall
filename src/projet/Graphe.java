@@ -13,8 +13,6 @@ public class Graphe implements Iterable<int[]>{
 	private List<int[]> graphe;
 	private int nbSommet;
 	private int nbArc;
-	private boolean[] visited;
-	private List<List<Integer>> allSommetSuccesseur;
 	
 	/**
 	 * @param file contenant un graphe
@@ -53,20 +51,6 @@ public class Graphe implements Iterable<int[]>{
 		}else throw new EmptyFileException("Aucun graphe n'est présent !");
 		this.fichier.close();
 		
-		this.allSommetSuccesseur = new ArrayList<>();
-		for (int j = 0; j < this.nbSommet; j++) {
-			this.allSommetSuccesseur.add(makeSommetSuccesseur(j));
-		}
-	}
-	
-	public List<Integer> makeSommetSuccesseur(final int sommet) {
-		List<Integer> successeur = new ArrayList<>();
-		for(int[] s: this) {
-			if(s[0] == sommet) {
-				successeur.add(s[1]);
-			}
-		}
-		return successeur;
 	}
 	
 	/**
@@ -87,6 +71,15 @@ public class Graphe implements Iterable<int[]>{
 		return integerTab;
 	}
 	
+	public int getPoids(final int sommet, final int successeur) {
+		int poids = 0;
+		for(int[] s: this) {
+			if(s[0] == sommet && s[1] == successeur) {
+				poids = s[2];
+			}
+		}
+		return poids;
+	}
 	/**
 	 * @return int[][]: la matrice d'adjacence du graphe
 	 */
@@ -129,52 +122,25 @@ public class Graphe implements Iterable<int[]>{
 		return matriceVal;
 	}
 	
-	/**
-	 * 
-	 * @param s1
-	 * @param s2
-	 * @return boolean
-	 */
-	public boolean existChemin(final int s1, final int s2) {
-		this.visited = new boolean[this.nbSommet];
-		for (int i = 0; i < visited.length; i++) {
-			this.visited[i] = false;
+	public boolean bellmanFord(final int s) {
+		double[] d = new double[this.nbSommet];
+		for(int[] sommet: this) {
+			d[sommet[0]] = Double.POSITIVE_INFINITY;
 		}
+		d[s] = 0;
 		
-		
-		int n = this.matriceAdjacent().length;
-		List<Integer> file = new ArrayList<>();
-		file.add(s1);
-		int courant;
-		while(!file.isEmpty()) {
-			courant = file.remove(0);
-			this.visited[courant] = true;
-			
-			for(int i = 0; i < n; i++) {
-				if(this.matriceAdjacent()[courant][i] > 0 && this.visited[i] == false) {
-					file.add(i);
-					this.visited[i] = true;
-				}else if (this.matriceAdjacent()[courant][i] > 0 && i == s2) {
-					return true;
-				}
+		for (int k = 1; k < this.nbSommet -1; k++) {
+			for(int[] t: this) {
+				d[t[0]] = Math.min(d[t[0]], (d[t[1]] + this.getPoids(t[0], t[1])));
 			}
 		}
 		
+		for(int[] t: this) { // Detection des circuit absorbant
+			if(d[t[0]] > d[t[1]] + this.getPoids(t[0], t[1])) {
+				return true;
+			}
+		}
 		return false;
-	}
-	
-	/*
-	 * On va maintenant coder une fontion renvoyant si le graphe possede un circuit élémentaire les 
-	 * extrémité initial composant le circuit
-	 */
-	public double aCircuit() {
-		for(int i = 0; i < this.nbSommet; i++) {
-			if(existChemin(i, i)) {
-				return i;
-			}
-		}
-		
-		return Double.POSITIVE_INFINITY;
 	}
 	
 	/**
@@ -183,23 +149,15 @@ public class Graphe implements Iterable<int[]>{
 	 */
 	public boolean circuitAbsorbant() {
 		/*
-		 * Pour savoir si un graphe possède un circuit absorbant
+		 * Pour savoir si un graphe possède un circuit absorbant on va appliquer Bellman-Ford
 		 */
-		if(aCircuit() != Double.POSITIVE_INFINITY) {
-			int sommetDepart = (int) aCircuit();
-			System.out.println(sommetDepart);
-			int valeurTotalArc = 0;
-			List<Integer> successeur = this.allSommetSuccesseur.get(sommetDepart);
-			
-			successeur.add(sommetDepart);
-			
-			for(int[] sommet: this) {
-				if(successeur.contains(sommet[0])) {
-					valeurTotalArc += sommet[2];
-				}
+		boolean rep;
+		
+		for (int i = 0; i < this.nbSommet; i++) {
+			rep = bellmanFord(i);
+			if (rep) {
+				return rep;
 			}
-			
-			return valeurTotalArc < 0;
 		}
 		return false;
 	}
