@@ -13,7 +13,8 @@ public class Graphe implements Iterable<int[]>{
 	private List<int[]> graphe;
 	private int nbSommet;
 	private int nbArc;
-	
+	private boolean[] visited;
+	private List<List<Integer>> allSommetSuccesseur;
 	
 	/**
 	 * @param file contenant un graphe
@@ -23,7 +24,6 @@ public class Graphe implements Iterable<int[]>{
 	public Graphe(final FileInputStream file) throws FileNotFoundException, 
 										EmptyFileException, NonCompletGrapheException {
 		this.graphe = new ArrayList<>();
-		
 		/*
 		 * On va stocké le graphe rentré en paramètre en mémoire.
 		 * nbSommet contient le nombre de sommet
@@ -52,6 +52,21 @@ public class Graphe implements Iterable<int[]>{
 			}
 		}else throw new EmptyFileException("Aucun graphe n'est présent !");
 		this.fichier.close();
+		
+		this.allSommetSuccesseur = new ArrayList<>();
+		for (int j = 0; j < this.nbSommet; j++) {
+			this.allSommetSuccesseur.add(makeSommetSuccesseur(j));
+		}
+	}
+	
+	public List<Integer> makeSommetSuccesseur(final int sommet) {
+		List<Integer> successeur = new ArrayList<>();
+		for(int[] s: this) {
+			if(s[0] == sommet) {
+				successeur.add(s[1]);
+			}
+		}
+		return successeur;
 	}
 	
 	/**
@@ -114,6 +129,89 @@ public class Graphe implements Iterable<int[]>{
 		return matriceVal;
 	}
 	
+	/**
+	 * 
+	 * @param s1
+	 * @param s2
+	 * @return boolean
+	 */
+	public boolean existChemin(final int s1, final int s2) {
+		this.visited = new boolean[this.nbSommet];
+		for (int i = 0; i < visited.length; i++) {
+			this.visited[i] = false;
+		}
+		
+		
+		int n = this.matriceAdjacent().length;
+		List<Integer> file = new ArrayList<>();
+		file.add(s1);
+		int courant;
+		while(!file.isEmpty()) {
+			courant = file.remove(0);
+			this.visited[courant] = true;
+			
+			for(int i = 0; i < n; i++) {
+				if(this.matriceAdjacent()[courant][i] > 0 && this.visited[i] == false) {
+					file.add(i);
+					this.visited[i] = true;
+				}else if (this.matriceAdjacent()[courant][i] > 0 && i == s2) {
+					return true;
+				}
+			}
+		}
+		
+		return false;
+	}
+	
+	/*
+	 * On va maintenant coder une fontion renvoyant si le graphe possede un circuit élémentaire les 
+	 * extrémité initial composant le circuit
+	 */
+	public double aCircuit() {
+		for(int i = 0; i < this.nbSommet; i++) {
+			if(existChemin(i, i)) {
+				return i;
+			}
+		}
+		
+		return Double.POSITIVE_INFINITY;
+	}
+	
+	/**
+	 * 
+	 * @return boolean: true si le graphe possede un circuit absorbant, false sinon
+	 */
+	public boolean circuitAbsorbant() {
+		/*
+		 * Pour savoir si un graphe possède un circuit absorbant
+		 */
+		if(aCircuit() != Double.POSITIVE_INFINITY) {
+			int sommetDepart = (int) aCircuit();
+			System.out.println(sommetDepart);
+			int valeurTotalArc = 0;
+			List<Integer> successeur = this.allSommetSuccesseur.get(sommetDepart);
+			
+			successeur.add(sommetDepart);
+			
+			for(int[] sommet: this) {
+				if(successeur.contains(sommet[0])) {
+					valeurTotalArc += sommet[2];
+				}
+			}
+			
+			return valeurTotalArc < 0;
+		}
+		return false;
+	}
+	
+	/**
+	 * @return the nbSommet
+	 */
+	public int getNbSommet() {
+		return nbSommet;
+	}
+	
+	
 	@Override
 	public String toString() {
 		/*
@@ -145,66 +243,6 @@ public class Graphe implements Iterable<int[]>{
 		return toString;
 	}
 	
-	
-	/*
-	 * On va maintenant coder une fontion renvoyant si le graphe possede un circuit élémentaire les 
-	 * extrémité initial composant le circuit
-	 */
-	public List<Integer> aCircuit() {
-		List<Integer> circuit = null;
-		int[] circuitEnCourt = new int[graphe.size()];
-		
-		int cpt = 0;
-		for(int[] i: this) {
-			circuitEnCourt[cpt] = i[1];
-		}
-		
-		
-		return circuit;
-	}
-	
-	// [nb_circuit, sommet]
-	/**
-	 * 
-	 * @return boolean: true si le graphe possede un circuit absorbant, false sinon
-	 */
-	public boolean circuitAbsorbant() {
-		/*
-		 * Pour savoir si un graphe possède un circuit absorbant
-		 */
-
-		return true;
-	}
-	
-	/**
-	 * @return the nbSommet
-	 */
-	public int getNbSommet() {
-		return nbSommet;
-	}
-
-	/**
-	 * @param nbSommet the nbSommet to set
-	 */
-	public void setNbSommet(int nbSommet) {
-		this.nbSommet = nbSommet;
-	}
-
-	/**
-	 * @return the nbArc
-	 */
-	public int getNbArc() {
-		return nbArc;
-	}
-
-	/**
-	 * @param nbArc the nbArc to set
-	 */
-	public void setNbArc(int nbArc) {
-		this.nbArc = nbArc;
-	}
-
-
 	@Override
 	public Iterator<int[]> iterator() {
 		return this.graphe.iterator();
