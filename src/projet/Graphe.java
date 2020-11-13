@@ -15,19 +15,23 @@ public class Graphe implements Iterable<int[]>{
 	private int nbArc;
 	
 	/**
-	 * @param file contenant un graphe
-	 * @throws NonCompletGrapheException 
-	 *
+	 * 
+	 * @param file
+	 * @throws FileNotFoundException
+	 * @throws EmptyFileException
+	 * @throws NonCompletGrapheException
 	 */
 	public Graphe(final FileInputStream file) throws FileNotFoundException, 
 										EmptyFileException, NonCompletGrapheException {
+		
 		this.graphe = new ArrayList<>();
+		
 		/*
-		 * On va stocké le graphe rentré en paramètre en mémoire.
-		 * nbSommet contient le nombre de sommet
-		 * nbArc contient le nombre d'arc
-		 * graphe contient Extrémité initiale, suivie de l’extrémité terminale, suivie de la valeur 
-		 * de l’arc : [Extrémité initiale, Extrémité final, Valeur de l'arc].
+		 * On va stocké le graphe rentré en paramètre en mémoire : 
+		 * 		- nbSommet contient le nombre de sommet
+		 * 		- nbArc contient le nombre d'arc
+		 * 		- graphe contient Extrémité initiale, suivie de l’extrémité terminale, 
+		 * 		  suivie de la valeur l’arc : [Extrémité initiale, Extrémité final, Valeur de l'arc].
 		 */
 		
 		this.fichier = new Scanner(file);
@@ -80,6 +84,7 @@ public class Graphe implements Iterable<int[]>{
 		}
 		return poids;
 	}
+	
 	/**
 	 * @return int[][]: la matrice d'adjacence du graphe
 	 */
@@ -87,7 +92,7 @@ public class Graphe implements Iterable<int[]>{
 	public int[][] matriceAdjacent() {
 		/*
 		 * On crée la matrice d'adjacence, si aucune valeur est attribuer au tableau 2D la 
-		 * valeur 0 est donner par défaut
+		 * valeur 0 est donner par défaut.
 		 */
 		int[][] matriceAdj = new int[this.nbSommet][this.nbSommet];
 		
@@ -103,7 +108,7 @@ public class Graphe implements Iterable<int[]>{
 	public double[][] matriceValeur() {
 		/*
 		 * On crée la matrice d'adjacence, si aucune valeur est attribuer au tableau 2D la 
-		 * valeur 0 est donner par défaut
+		 * valeur Infinity est donner par défaut.
 		 */
 		double[][] matriceVal = new double[this.nbSommet][this.nbSommet]; 
 		
@@ -122,21 +127,34 @@ public class Graphe implements Iterable<int[]>{
 		return matriceVal;
 	}
 	
+	/**
+	 * 
+	 * @param s
+	 * @return boolean 
+	 */
 	public boolean bellmanFord(final int s) {
+		/*
+		 *  Ici on utilise bellmanFord uniquement pour détecter les circuit absorbant
+		 *  si : d[t[0]] > d[t[1]] + this.getPoids(t[0], t[1]) alors le graphe possède un circuit absorbant
+		 */
+		
+		//On remplie le tableau d avec 0 pour le sommet s et infinity pour les autre.
 		double[] d = new double[this.nbSommet];
 		for(int[] sommet: this) {
 			d[sommet[0]] = Double.POSITIVE_INFINITY;
 		}
 		d[s] = 0;
 		
+		//On va calculer toute les valeurs.
 		for (int k = 1; k < this.nbSommet -1; k++) {
 			for(int[] t: this) {
-				d[t[0]] = Math.min(d[t[0]], (d[t[1]] + this.getPoids(t[0], t[1])));
+				d[t[1]] = Math.min(d[t[1]], (d[t[0]] + this.getPoids(t[0], t[1])));
 			}
 		}
 		
-		for(int[] t: this) { // Detection des circuit absorbant
-			if(d[t[0]] > d[t[1]] + this.getPoids(t[0], t[1])) {
+		// Detection des circuit absorbant.
+		for(int[] t: this) { 
+			if(d[t[1]] > d[t[0]] + this.getPoids(t[0], t[1])) {
 				return true;
 			}
 		}
@@ -149,7 +167,8 @@ public class Graphe implements Iterable<int[]>{
 	 */
 	public boolean circuitAbsorbant() {
 		/*
-		 * Pour savoir si un graphe possède un circuit absorbant on va appliquer Bellman-Ford
+		 * Pour savoir si un graphe possède un circuit absorbant on va appliquer Bellman-Ford pour chaque 
+		 * sommet du graphe.
 		 */
 		boolean rep;
 		
@@ -177,26 +196,40 @@ public class Graphe implements Iterable<int[]>{
 		 * On a choisie de retourner la matrice adjacente et de valeur en même temps, l'une 
 		 * à côté de l'autre.
 		 */
-		String toString = "Matrice Adjacente :\n";
-
+		String toString = "Matrice Adjacente :\n\n";
+		int i = 0;
+		toString += "    ";
+		for(int a = 0; a < this.nbSommet; a++) {
+			toString += a + "\t";
+		}
+		toString += "\n\n";
 		for(int[] matrice: matriceAdjacent()) {
+			toString += i+" | ";
 			for(int element: matrice) {
 				toString += element + "\t";
 			}
 			toString += "\n";
+			i++;
 		}
 		
-
-		toString += "\nMatrice de Valeur :\n";
+		toString += "\nMatrice de Valeur :\n\n";
+		i = 0;
+		toString += "    ";
+		for(int a = 0; a < this.nbSommet; a++) {
+			toString += a + "\t";
+		}
+		toString += "\n\n";
 		for(double[] matrice: matriceValeur()) {
+			toString += i+" | ";
 			for(double element: matrice) {
 				if(element == Double.POSITIVE_INFINITY) {
 					toString += "I\t";
 				}else {
-					toString += element + "\t";
+					toString += (int) element + "\t";
 				}
 			}
 			toString += "\n";
+			i++;
 		}
 		return toString;
 	}
